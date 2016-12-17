@@ -1,5 +1,4 @@
 #include "motor.h"
-#include "protocol.h"
 
 #include <IRremote.h>
 
