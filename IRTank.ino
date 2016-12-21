@@ -52,17 +52,16 @@ void setup() {
   irrecv.enableIRIn(); // Start the receiver
 }
 
-int recv_err_cnt = 0;
 unsigned long last_received = 0;
 void loop() {
   if (irrecv.decode(&results)) {
     dump(&results);
-
-    long msg = (results.value >> 16) & 0xffff;  // 16bit
-    long not_msg = results.value &     0xffff;
+    long value = results.value;
+    long msg = (value >> 16) & 0xffff;  // 16bit
+    long not_msg = value &     0xffff;
 
     // error check
-    if ((msg & not_msg) == 0) {
+    if (results.decode_type == NEC && (msg & not_msg) == 0) {
       work(msg);
     } else {
       Serial.println("error check failed");
@@ -70,14 +69,12 @@ void loop() {
 
     irrecv.resume();
     last_received = millis();
-
-    recv_err_cnt = 0;
-  } else {
-    unsigned long now = millis();
-    unsigned long dt = now - last_received;
-    if (dt >= 108 * 4)  work(0);
   }
-  delay(108);
+  
+  if (millis() - last_received >= 108 * 4) {
+    work(0);
+  }
+  delay(10);
 }
 
 void work(int msg) {
